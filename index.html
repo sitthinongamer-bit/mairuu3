@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITAN | Institutional Master Terminal (Top 50)</title>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --bg-main: #0b0e11;
+            --bg-card: #161a1e;
+            --binance-yellow: #fcd535;
+            --bull-green: #0ecb81;
+            --bear-red: #f6465d;
+            --fib-purple: #a855f7;
+            --text-muted: #848e9c;
+            --border-color: #2b3139;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif;
+            background-color: var(--bg-main);
+            color: #eaecef;
+            margin: 0;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-bar {
+            width: 100%; max-width: 1440px;
+            display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;
+            margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+        }
+
+        .macro-status { display: flex; gap: 10px; flex-wrap: wrap; }
+        .status-pill {
+            padding: 6px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+        }
+
+        /* Open Positions Panel */
+        .positions-panel {
+            width: 100%; max-width: 1440px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;
+            padding: 16px 20px; margin-bottom: 18px;
+        }
+        .pos-top-row {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 12px;
+        }
+        .pos-title { font-size: 13px; font-weight: 800; color: var(--binance-yellow); text-transform: uppercase; }
+        .quick-open-bar {
+            display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+            background: #0b0e11; border: 1px solid var(--border-color); border-radius: 10px;
+            padding: 10px 12px; margin-bottom: 12px;
+        }
+        .pos-input {
+            background: #161a1e; color: #eaecef; border: 1px solid var(--border-color);
+            border-radius: 7px; padding: 6px 9px; font-size: 11px; font-family: monospace; width: 115px;
+        }
+        .pos-input:focus { outline: none; border-color: var(--binance-yellow); }
+        .pos-action-btn {
+            border: none; border-radius: 7px; padding: 7px 11px; font-size: 11px; font-weight: 800; cursor: pointer;
+        }
+        .btn-open-long { background: rgba(14, 203, 129, 0.16); color: var(--bull-green); border: 1px solid var(--bull-green); }
+        .btn-open-short { background: rgba(246, 70, 93, 0.16); color: var(--bear-red); border: 1px solid var(--bear-red); }
+        .btn-close-pos { background: rgba(252, 213, 53, 0.15); color: var(--binance-yellow); border: 1px solid var(--binance-yellow); }
+
+        .active-pos-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px;
+        }
+        .pos-card {
+            background: #0b0e11; border: 1px solid var(--border-color); border-radius: 10px; padding: 11px 13px;
+            font-family: monospace; font-size: 11px; display: flex; flex-direction: column; gap: 6px;
+        }
+        .pos-card.long { border-left: 4px solid var(--bull-green); }
+        .pos-card.short { border-left: 4px solid var(--bear-red); }
+        .pos-card-head { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 12px; }
+        .pos-levels { display: flex; justify-content: space-between; color: #cfd6df; font-size: 10px; }
+
+        /* Overall Win Rate & Trade History Panel */
+        .history-panel {
+            width: 100%; max-width: 1440px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;
+            padding: 16px 20px; margin-bottom: 18px;
+        }
+        .overall-top {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+        }
+        .overall-title { font-size: 13px; font-weight: 800; color: var(--binance-yellow); text-transform: uppercase; }
+        .overall-metrics { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-family: monospace; font-size: 13px; font-weight: 800; }
+        .metric-badge {
+            background: #0b0e11; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px;
+        }
+        .history-header-row {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+            margin-top: 12px; margin-bottom: 10px;
+        }
+        .history-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .history-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .hist-filter-btn {
+            background: #0b0e11; color: var(--text-muted); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 4px 9px; font-size: 10px; font-weight: 800; cursor: pointer;
+        }
+        .hist-filter-btn.active { border-color: var(--binance-yellow); color: var(--binance-yellow); background: rgba(252, 213, 53, 0.1); }
+        .history-list {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; max-height: 130px; flex-wrap: wrap;
+        }
+        .history-chip {
+            background: #0b0e11; border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 7px 11px; font-size: 11px; font-family: monospace; cursor: pointer;
+            display: flex; align-items: center; gap: 7px; transition: border-color 0.15s ease;
+        }
+        .history-chip:hover { border-color: var(--binance-yellow); }
+        .chip-win { border-left: 3px solid var(--bull-green); }
+        .chip-loss { border-left: 3px solid var(--bear-red); }
+        .chip-time { color: var(--text-muted); font-size: 10px; }
+        .empty-history { font-size: 12px; color: var(--text-muted); padding: 6px 0; }
+
+        /* % Price Distance Ruler Bar */
+        .ruler-bar {
+            width: 100%; max-width: 1440px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 13px 18px; margin-bottom: 18px;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        }
+        .ruler-title { font-size: 12px; font-weight: 800; color: var(--binance-yellow); text-transform: uppercase; }
+        .ruler-inputs { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .ruler-input {
+            background: #0b0e11; color: #eaecef; border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 8px 10px; font-size: 12px; font-family: monospace; width: 135px;
+        }
+        .ruler-input:focus { outline: none; border-color: var(--binance-yellow); }
+        .ruler-result {
+            background: #0b0e11; border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 8px 14px; font-size: 12px; font-weight: 700; font-family: monospace;
+        }
+        .ruler-mini-btn {
+            background: rgba(252, 213, 53, 0.12); color: var(--binance-yellow); border: 1px solid rgba(252, 213, 53, 0.35);
+            border-radius: 6px; padding: 7px 10px; font-size: 11px; font-weight: 700; cursor: pointer;
+        }
+        .ruler-mini-btn:hover { background: var(--binance-yellow); color: #000; }
+
+        .mid-section {
+            display: flex; gap: 16px; width: 100%; max-width: 1440px; height: 520px; margin-bottom: 20px;
+        }
+
+        .controls {
+            width: 175px; background: var(--bg-card); padding: 14px; border-radius: 12px;
+            border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+        }
+
+        .control-label {
+            font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;
+            margin-top: 4px; letter-spacing: 0.6px;
+        }
+
+        .tf-btn {
+            background: transparent; color: var(--text-muted); border: 1px solid var(--border-color);
+            padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.2s ease;
+        }
+        .tf-btn:hover { border-color: var(--binance-yellow); color: #fff; }
+        .tf-btn.active { background: var(--binance-yellow); color: black; border-color: var(--binance-yellow); }
+
+        .tool-btn {
+            background: rgba(168, 85, 247, 0.1); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.35);
+            padding: 8px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 11px; transition: all 0.2s ease;
+        }
+        .tool-btn:hover { background: rgba(168, 85, 247, 0.22); color: #fff; }
+
+        .chart-wrapper {
+            flex: 1; position: relative; border-radius: 12px; border: 1px solid var(--border-color);
+            overflow: hidden; background: var(--bg-card);
+        }
+        .chart-container { width: 100%; height: 100%; }
+
+        /* Chart Position Overlay HUD & Level Lines */
+        .chart-pos-hud {
+            position: absolute; top: 10px; left: 56px; z-index: 20;
+            background: rgba(11, 14, 17, 0.92); backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 12px;
+            font-family: monospace; font-size: 11px; display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+        .chart-pos-hud.visible { display: flex; }
+        .chart-level-strip {
+            position: absolute; right: 12px; bottom: 42px; z-index: 19;
+            background: rgba(11, 14, 17, 0.9); border: 1px solid var(--border-color); border-radius: 9px;
+            padding: 7px 11px; font-family: monospace; font-size: 10px; display: none; flex-direction: column; gap: 3px;
+        }
+        .chart-level-strip.visible { display: flex; }
+        .lvl-tp { color: var(--bull-green); border-bottom: 1px dashed rgba(14, 203, 129, 0.45); padding-bottom: 2px; }
+        .lvl-entry { color: var(--binance-yellow); border-bottom: 1px dashed rgba(252, 213, 53, 0.45); padding: 2px 0; }
+        .lvl-sl { color: var(--bear-red); padding-top: 2px; }
+
+        /* Fib & Pattern Cheat Drawer */
+        .guide-box {
+            width: 100%; max-width: 1440px; display: none;
+            background: var(--bg-card); border: 1px solid rgba(168, 85, 247, 0.45); border-radius: 12px;
+            padding: 16px 20px; margin-bottom: 20px;
+        }
+        .guide-box.open { display: block; }
+        .guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 10px; font-size: 12px; }
+        .guide-card { background: #0b0e11; border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; }
+        .guide-card strong { color: var(--binance-yellow); display: block; margin-bottom: 6px; }
+
+        /* Search & Signal Filter Toolbar */
+        .search-toolbar {
+            width: 100%; max-width: 1440px;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+            margin-bottom: 18px;
+        }
+        .search-box-wrap {
+            display: flex; align-items: center; gap: 8px; flex: 1; min-width: 240px; max-width: 420px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 4px 10px;
+        }
+        .search-box-wrap:focus-within { border-color: var(--binance-yellow); }
+        .search-input {
+            flex: 1; background: transparent; border: none; color: #eaecef;
+            font-size: 13px; font-weight: 600; padding: 7px 4px; outline: none; text-transform: uppercase;
+        }
+        .search-clear-btn {
+            background: transparent; color: var(--text-muted); border: none; cursor: pointer;
+            font-size: 13px; font-weight: 800; padding: 4px 8px; border-radius: 6px;
+        }
+        .search-clear-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+        
+        .filter-btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+        .sig-filter-btn {
+            background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color);
+            padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; transition: all 0.2s ease;
+        }
+        .sig-filter-btn:hover { border-color: #fff; color: #fff; }
+        .sig-filter-btn.active-all { background: rgba(255,255,255,0.1); color: #fff; border-color: #fff; }
+        .sig-filter-btn.active-long { background: rgba(14, 203, 129, 0.15); color: var(--bull-green); border-color: var(--bull-green); }
+        .sig-filter-btn.active-short { background: rgba(246, 70, 93, 0.15); color: var(--bear-red); border-color: var(--bear-red); }
+        .sig-filter-btn.active-neutral { background: rgba(252, 213, 53, 0.15); color: var(--binance-yellow); border-color: var(--binance-yellow); }
+
+        .search-meta { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+        .search-meta span { color: var(--binance-yellow); }
+
+        .dashboard-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; width: 100%; max-width: 1440px;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1; text-align: center; padding: 40px 20px;
+            background: var(--bg-card); border: 1px dashed var(--border-color); border-radius: 14px;
+            color: var(--text-muted); font-size: 14px;
+        }
+
+        .card { 
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; 
+            cursor: pointer; transition: transform 0.15s ease, border-color 0.2s ease; 
+        }
+        .card:hover { border-color: var(--binance-yellow); transform: translateY(-2px); }
+        .card.active-card { border-color: var(--binance-yellow); background: rgba(252, 213, 53, 0.02); }
+        .card.has-pos { box-shadow: inset 0 0 0 1px rgba(252, 213, 53, 0.35); }
+
+        .coin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .coin-name { font-size: 18px; font-weight: 800; }
+        .coin-rank { font-size: 11px; color: var(--text-muted); font-weight: 700; margin-left: 6px; }
+        .pos-pill-tag {
+            font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; margin-left: 6px;
+            font-family: monospace;
+        }
+        .tag-long { background: rgba(14, 203, 129, 0.18); color: var(--bull-green); border: 1px solid var(--bull-green); }
+        .tag-short { background: rgba(246, 70, 93, 0.18); color: var(--bear-red); border: 1px solid var(--bear-red); }
+        .price-text { font-size: 17px; font-weight: 700; color: var(--binance-yellow); font-family: monospace; }
+
+        .signal-block {
+            background: #0b0e11; padding: 11px; border-radius: 10px; margin-bottom: 10px; text-align: center; 
+            border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; color: var(--text-muted);
+        }
+        .sig-long { border-color: var(--bull-green); color: var(--bull-green); background: rgba(14, 203, 129, 0.08); }
+        .sig-short { border-color: var(--bear-red); color: var(--bear-red); background: rgba(246, 70, 93, 0.08); }
+        .targets { display: flex; justify-content: space-around; margin-top: 7px; font-size: 11px; font-weight: 600; font-family: monospace; }
+
+        .pos-control-box {
+            background: rgba(252, 213, 53, 0.05); border: 1px solid rgba(252, 213, 53, 0.22);
+            border-radius: 10px; padding: 9px 10px; margin-bottom: 10px; font-size: 11px; font-family: monospace;
+        }
+        .pos-open-btns { display: flex; gap: 6px; }
+        .pos-open-btns button { flex: 1; padding: 7px; border-radius: 6px; font-size: 10px; font-weight: 800; cursor: pointer; }
+        .pos-active-strip {
+            display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+
+        .meta-strip {
+            background: rgba(168, 85, 247, 0.07); border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; font-size: 11px; font-family: monospace;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .meta-row { display: flex; justify-content: space-between; }
+        .pos { color: var(--bull-green); font-weight: 700; }
+        .neg { color: var(--bear-red); font-weight: 700; }
+        .fib-val { color: #d8b4fe; font-weight: 700; }
+
+        .journal-box { background: rgba(0,0,0,0.25); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        .journal-header { display: flex; justify-content: space-between; align-items: center; font-size: 10px; text-transform: uppercase; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; }
+        
+        .global-stats {
+            background: rgba(252, 213, 53, 0.08); border-radius: 6px; padding: 7px 10px; margin-bottom: 10px; border: 1px solid rgba(252, 213, 53, 0.2);
+            display: flex; justify-content: space-between; font-size: 11px; font-weight: 800;
+        }
+
+        .stats-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; }
+        .btn-group { display: flex; gap: 8px; }
+        .j-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 11px; transition: opacity 0.2s; }
+        .j-btn:hover { opacity: 0.85; }
+        .j-win { background: rgba(14, 203, 129, 0.15); color: var(--bull-green); border: 1px solid var(--bull-green); }
+        .j-loss { background: rgba(246, 70, 93, 0.15); color: var(--bear-red); border: 1px solid var(--bear-red); }
+        .j-reset { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); font-size: 10px; padding: 3px 7px; border-radius: 4px; cursor: pointer; }
+        .j-reset:hover { color: #fff; border-color: #fff; }
+
+        @media (max-width: 768px) {
+            body { padding: 12px 14px; }
+            .mid-section { flex-direction: column; height: auto; }
+            .controls { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; overflow-y: visible; }
+            .control-label { display: none; }
+            .tf-btn, .tool-btn { flex: 1; min-width: 65px; }
+            .chart-wrapper { height: 400px; width: 100%; flex: none; }
+            .chart-pos-hud { left: 10px; top: 8px; right: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <div>
+            <h1 style="margin:0; font-size: 28px; letter-spacing: -1px;">TITAN<span style="color:var(--binance-yellow)">.</span></h1>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700; letter-spacing: 1px;">INSTITUTIONAL DATA TERMINAL · TOP 50 · OPEN / CLOSE POSITION ON CHART</div>
+        </div>
+        <div class="macro-status">
+            <div class="status-pill">DXY <span style="color:var(--bear-red)">↗ RISING</span></div>
+            <div class="status-pill">NASDAQ <span style="color:var(--bull-green)">↗ RISING</span></div>
+            <div class="status-pill">BTC.DOM <span style="color:var(--binance-yellow)">58.2%</span></div>
+        </div>
+    </div>
+
+    <!-- Open Positions Manager -->
+    <div class="positions-panel">
+        <div class="pos-top-row">
+            <div class="pos-title">OPEN POSITIONS (<span id="openPosCount">0</span> ACTIVE) — เปิดและปิดสถานะแบบแสดงผลบนกราฟ</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="j-reset" onclick="toggleChartOverlay()">ซ่อน/แสดงเส้นบนกราฟ</button>
+            </div>
+        </div>
+
+        <div class="quick-open-bar">
+            <span style="font-size:11px; font-weight:800; color:var(--binance-yellow);">เหรียญที่เลือก: <span id="posTargetSym">BTC</span></span>
+            <input id="posEntryInput" class="pos-input" type="number" step="any" placeholder="Entry Price">
+            <input id="posTpInput" class="pos-input" type="number" step="any" placeholder="TP Price">
+            <input id="posSlInput" class="pos-input" type="number" step="any" placeholder="SL Price">
+            <button class="ruler-mini-btn" onclick="prefillPositionLevels()">ดึงราคาปัจจุบัน + ATR</button>
+            <button class="pos-action-btn btn-open-long" onclick="openPosition(activeSym, 'LONG')">+ OPEN LONG</button>
+            <button class="pos-action-btn btn-open-short" onclick="openPosition(activeSym, 'SHORT')">+ OPEN SHORT</button>
+        </div>
+
+        <div id="activePositionsList" class="active-pos-grid"></div>
+    </div>
+
+    <!-- Overall Win Rate & Trade Log -->
+    <div class="history-panel">
+        <div class="overall-top">
+            <div class="overall-title">OVERALL WIN RATE (สรุปผลรวมทุกเหรียญ · ทุก TF)</div>
+            <div class="overall-metrics">
+                <div class="metric-badge">WIN RATE: <span id="overallRate" style="color:var(--binance-yellow)">0%</span></div>
+                <div class="metric-badge"><span id="overallWL"><span class="pos">0W</span> - <span class="neg">0L</span></span></div>
+                <div class="metric-badge">TOTAL TRADES: <span id="overallTotal" style="color:#eaecef">0</span></div>
+            </div>
+        </div>
+        <div class="history-header-row">
+            <div class="history-label">ประวัติการกด WIN / LOSS ล่าสุด (คลิกที่รายการเพื่อเปิดกราฟเหรียญนั้น)</div>
+            <div class="history-actions">
+                <button id="hfilter-ALL" class="hist-filter-btn active" onclick="setHistoryFilter('ALL')">ทั้งหมด</button>
+                <button id="hfilter-w" class="hist-filter-btn" onclick="setHistoryFilter('w')">เฉพาะ +WIN</button>
+                <button id="hfilter-l" class="hist-filter-btn" onclick="setHistoryFilter('l')">เฉพาะ -LOSS</button>
+                <button class="j-reset" onclick="clearHistory()">ล้างประวัติการกด</button>
+            </div>
+        </div>
+        <div id="tradeHistoryList" class="history-list"></div>
+    </div>
+
+    <!-- % Price Difference Ruler -->
+    <div class="ruler-bar">
+        <div class="ruler-title">% DISTANCE RULER (วัดระยะราคาต่างกันกี่ %)</div>
+        <div class="ruler-inputs">
+            <input id="priceA" class="ruler-input" type="number" step="any" placeholder="Price A (ฐาน)" oninput="calcDiff()">
+            <span style="color:var(--text-muted); font-weight:700;">→</span>
+            <input id="priceB" class="ruler-input" type="number" step="any" placeholder="Price B (เป้าหมาย)" oninput="calcDiff()">
+            <button class="ruler-mini-btn" onclick="fillActivePrice()">ใช้ราคาเหรียญที่เลือก</button>
+        </div>
+        <div id="diffOutput" class="ruler-result">ระยะต่าง: --% | ส่วนต่าง: --</div>
+    </div>
+
+    <div class="mid-section">
+        <div class="controls">
+            <div class="control-label">Timeframe</div>
+            <button id="btn-15m" class="tf-btn" onclick="updateTF('15m')">15M</button>
+            <button id="btn-1h" class="tf-btn" onclick="updateTF('1h')">1H</button>
+            <button id="btn-4h" class="tf-btn active" onclick="updateTF('4h')">4H</button>
+            <button id="btn-1d" class="tf-btn" onclick="updateTF('1d')">1D</button>
+            <button id="btn-1m" class="tf-btn" onclick="updateTF('1m')">1M</button>
+
+            <div class="control-label">Fib & Pattern</div>
+            <button class="tool-btn" onclick="toggleGuide()">Fib & Pattern Cheat</button>
+        </div>
+
+        <div class="chart-wrapper">
+            <div id="chartPosHud" class="chart-pos-hud"></div>
+            <div id="chartLevelStrip" class="chart-level-strip"></div>
+            <div class="chart-container" id="main_chart"></div>
+        </div>
+    </div>
+
+    <!-- Quick Fib & Pattern Reference -->
+    <div id="fibPatternGuide" class="guide-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:#d8b4fe; font-size:13px;">วิธีใช้ Fibonacci & Chart Pattern บนกราฟ TradingView ด้านบน</strong>
+            <button class="j-reset" onclick="toggleGuide()">ปิด (X)</button>
+        </div>
+        <div class="guide-grid">
+            <div class="guide-card">
+                <strong>Fibonacci Retracement (จุดย่อเข้าทำ)</strong>
+                เลือกไอคอน Fib Retracement ในแถบเครื่องมือซ้ายของกราฟ ลากจากจุด Swing Low → Swing High (ขาขึ้น) หรือกลับด้าน (ขาลง) จุดสำคัญคือ <b>0.5</b> และ <b>0.618 (Golden Pocket)</b>
+            </div>
+            <div class="guide-card">
+                <strong>Fibonacci Extension (จุดทำกำไร TP)</strong>
+                ใช้ลากวัดเป้าทำกำไรหลังเบรกโครงสร้าง ระดับยอดนิยมคือ <b>1.272</b> และ <b>1.618</b>
+            </div>
+            <div class="guide-card">
+                <strong>Chart Patterns ยอดนิยม</strong>
+                • <b>Breakout / Pullback:</b> ทะลุกรอบ Triangle / Channel แล้วรอย่อทดสอบแนวเดิม<br>
+                • <b>Double Top / Bottom:</b> แพทเทิร์นกลับตัว ดูการหลุด/ทะลุ Neckline พร้อมวอลุ่ม
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar & Signal Filters -->
+    <div class="search-toolbar">
+        <div class="search-box-wrap">
+            <span style="color:var(--binance-yellow); font-weight:800; font-size:13px;">🔍</span>
+            <input id="coinSearch" class="search-input" type="text" placeholder="ค้นหาเหรียญใน Top 50..." oninput="applyFilter()">
+            <button class="search-clear-btn" onclick="clearSearch()" title="ล้างคำค้นหา">✕</button>
+        </div>
+
+        <div class="filter-btn-group">
+            <button id="filter-all" class="sig-filter-btn active-all" onclick="setSignalFilter('ALL')">ALL (<span id="cnt-all">50</span>)</button>
+            <button id="filter-long" class="sig-filter-btn" onclick="setSignalFilter('LONG')">LONG (<span id="cnt-long">0</span>)</button>
+            <button id="filter-short" class="sig-filter-btn" onclick="setSignalFilter('SHORT')">SHORT (<span id="cnt-short">0</span>)</button>
+            <button id="filter-neutral" class="sig-filter-btn" onclick="setSignalFilter('NEUTRAL')">NEUTRAL (<span id="cnt-neutral">0</span>)</button>
+        </div>
+
+        <div id="searchMeta" class="search-meta">แสดง <span>50</span> / 50 เหรียญ</div>
+    </div>
+
+    <div class="dashboard-grid" id="main_grid"></div>
+
+    <script>
+        const symbols = [
+            "BTCUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "SOLUSDT",
+            "TRXUSDT", "HYPEUSDT", "ZECUSDT", "XMRUSDT", "DOGEUSDT",
+            "LINKUSDT", "ADAUSDT", "XLMUSDT", "BCHUSDT", "NEARUSDT",
+            "LTCUSDT", "UNIUSDT", "AVAXUSDT", "SUIUSDT", "TONUSDT",
+            "HBARUSDT", "TAOUSDT", "SHIBUSDT", "QNTUSDT", "PAXGUSDT",
+            "AAVEUSDT", "PEPEUSDT", "ENAUSDT", "DOTUSDT", "POLUSDT",
+            "APTUSDT", "ARBUSDT", "OPUSDT", "FILUSDT", "INJUSDT",
+            "RENDERUSDT", "FETUSDT", "TIAUSDT", "SEIUSDT", "STXUSDT",
+            "IMXUSDT", "MKRUSDT", "ALGOUSDT", "VETUSDT", "GRTUSDT",
+            "RUNEUSDT", "THETAUSDT", "SANDUSDT", "MANAUSDT", "CRVUSDT"
+        ];
+        const timeframes = ['15m', '1h', '4h', '1d', '1m'];
+        let interval = "4h", activeSym = "BTCUSDT", searchQuery = "", signalFilter = "ALL", historyFilter = "ALL";
+        let showChartOverlay = true;
+
+        const latestPrices = {};
+        const latestSignals = {};
+        const latestATR = {};
+
+        let stats = JSON.parse(localStorage.getItem("titanStatsV5")) || {};
+        let tradeHistory = JSON.parse(localStorage.getItem("titanTradeHistoryV1")) || [];
+        let openPositions = JSON.parse(localStorage.getItem("titanOpenPositionsV1")) || {};
+
+        function init() {
+            symbols.forEach(s => { 
+                if(!stats[s]) stats[s] = {};
+                timeframes.forEach(tf => {
+                    if(!stats[s][tf]) stats[s][tf] = {w:0, l:0};
+                });
+                latestSignals[s] = 'NEUTRAL';
+            });
+            updateTargetSymLabel();
+            renderGrid();
+            renderPositionsUI();
+            renderOverallAndHistory();
+            loadChart();
+            refreshData();
+            setInterval(refreshData, 30000);
+        }
+
+        function updateTargetSymLabel() {
+            document.getElementById("posTargetSym").innerText = activeSym.replace("USDT", "");
+        }
+
+        function prefillPositionLevels(side = "LONG") {
+            const cur = latestPrices[activeSym];
+            if (!cur) return;
+            const atr = latestATR[activeSym] || (cur * 0.02);
+            const tp = side === "SHORT" ? cur - atr * 3 : cur + atr * 3;
+            const sl = side === "SHORT" ? cur + atr * 1.5 : cur - atr * 1.5;
+            document.getElementById("posEntryInput").value = cur;
+            document.getElementById("posTpInput").value = Number(tp.toFixed(6));
+            document.getElementById("posSlInput").value = Number(sl.toFixed(6));
+        }
+
+        function toggleChartOverlay() {
+            showChartOverlay = !showChartOverlay;
+            renderChartPositionOverlay();
+        }
+
+        function calcUnrealizedPct(pos, currentPrice) {
+            if (!pos || !currentPrice || !pos.entry) return null;
+            if (pos.side === "LONG") {
+                return ((currentPrice - pos.entry) / pos.entry) * 100;
+            }
+            return ((pos.entry - currentPrice) / pos.entry) * 100;
+        }
+
+        function openPosition(s, side, customEntry = null, customTp = null, customSl = null) {
+            const curPrice = customEntry || latestPrices[s];
+            if (!curPrice) {
+                alert("กำลังโหลดราคาเหรียญ รอสักครู่แล้วลองใหม่อีกครั้งครับ");
+                return;
+            }
+            const atr = latestATR[s] || (curPrice * 0.02);
+
+            const entryVal = parseFloat(document.getElementById("posEntryInput").value);
+            const tpVal = parseFloat(document.getElementById("posTpInput").value);
+            const slVal = parseFloat(document.getElementById("posSlInput").value);
+
+            const useCustomInputs = (s === activeSym) && !isNaN(entryVal) && entryVal > 0;
+            const entry = useCustomInputs ? entryVal : curPrice;
+            const tp = (s === activeSym && !isNaN(tpVal) && tpVal > 0)
+                ? tpVal
+                : (customTp || (side === "SHORT" ? entry - atr * 3 : entry + atr * 3));
+            const sl = (s === activeSym && !isNaN(slVal) && slVal > 0)
+                ? slVal
+                : (customSl || (side === "SHORT" ? entry + atr * 1.5 : entry - atr * 1.5));
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            openPositions[s] = {
+                symbol: s,
+                side: side,
+                tf: interval,
+                entry: entry,
+                tp: tp,
+                sl: sl,
+                openedAt: timeStr
+            };
+            localStorage.setItem("titanOpenPositionsV1", JSON.stringify(openPositions));
+
+            if (s === activeSym) {
+                document.getElementById("posEntryInput").value = "";
+                document.getElementById("posTpInput").value = "";
+                document.getElementById("posSlInput").value = "";
+            }
+
+            renderPositionsUI();
+            renderChartPositionOverlay();
+            updateCardPositionBadge(s);
+        }
+
+        function closePosition(s) {
+            const pos = openPositions[s];
+            if (!pos) return;
+            const exitPrice = latestPrices[s] || pos.entry;
+            const pnlPct = calcUnrealizedPct(pos, exitPrice) ?? 0;
+            const isWin = pnlPct >= 0;
+            const outcomeType = isWin ? 'w' : 'l';
+
+            stats[s][pos.tf || interval][outcomeType]++;
+            localStorage.setItem("titanStatsV5", JSON.stringify(stats));
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const sign = pnlPct >= 0 ? '+' : '';
+            tradeHistory.unshift({
+                symbol: s,
+                tf: pos.tf || interval,
+                type: outcomeType,
+                price: exitPrice,
+                pnlText: `${sign}${pnlPct.toFixed(2)}%`,
+                side: pos.side,
+                time: timeStr
+            });
+            if (tradeHistory.length > 100) tradeHistory = tradeHistory.slice(0, 100);
+            localStorage.setItem("titanTradeHistoryV1", JSON.stringify(tradeHistory));
+
+            delete openPositions[s];
+            localStorage.setItem("titanOpenPositionsV1", JSON.stringify(openPositions));
+
+            renderPositionsUI();
+            renderChartPositionOverlay();
+            updateCardPositionBadge(s);
+            updateUI(s);
+            renderOverallAndHistory();
+        }
+
+        function updateCardPositionBadge(s) {
+            const card = document.getElementById(`card-${s}`);
+            const tagEl = document.getElementById(`${s}-pos-tag`);
+            const boxEl = document.getElementById(`${s}-pos-box`);
+            const pos = openPositions[s];
+
+            if (card) card.classList.toggle("has-pos", Boolean(pos));
+
+            if (tagEl) {
+                if (!pos) {
+                    tagEl.className = "pos-pill-tag";
+                    tagEl.style.display = "none";
+                    tagEl.innerText = "";
+                } else {
+                    tagEl.style.display = "inline-block";
+                    tagEl.className = `pos-pill-tag ${pos.side === "LONG" ? "tag-long" : "tag-short"}`;
+                    tagEl.innerText = `${pos.side} OPEN`;
+                }
+            }
+
+            if (boxEl) {
+                if (!pos) {
+                    boxEl.innerHTML = `
+                        <div class="pos-open-btns">
+                            <button class="btn-open-long" onclick="event.stopPropagation();openPosition('${s}','LONG')">OPEN LONG</button>
+                            <button class="btn-open-short" onclick="event.stopPropagation();openPosition('${s}','SHORT')">OPEN SHORT</button>
+                        </div>
+                    `;
+                } else {
+                    const cur = latestPrices[s] || pos.entry;
+                    const pnlPct = calcUnrealizedPct(pos, cur) ?? 0;
+                    const pnlClass = pnlPct >= 0 ? "pos" : "neg";
+                    const sign = pnlPct >= 0 ? "+" : "";
+                    boxEl.innerHTML = `
+                        <div class="pos-active-strip">
+                            <span>Entry: <b>$${formatPrice(pos.entry)}</b> | PnL: <span class="${pnlClass}">${sign}${pnlPct.toFixed(2)}%</span></span>
+                            <button class="pos-action-btn btn-close-pos" onclick="event.stopPropagation();closePosition('${s}')">CLOSE</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function renderPositionsUI() {
+            const keys = Object.keys(openPositions);
+            document.getElementById("openPosCount").innerText = keys.length;
+            const container = document.getElementById("activePositionsList");
+
+            if (!keys.length) {
+                container.innerHTML = `<div class="empty-history">ยังไม่มี Position ที่เปิดอยู่ — กด OPEN LONG หรือ OPEN SHORT บนการ์ดหรือแถบด้านบนเพื่อเปิดสถานะและดูบนกราฟ</div>`;
+                return;
+            }
+
+            container.innerHTML = keys.map(s => {
+                const pos = openPositions[s];
+                const cur = latestPrices[s] || pos.entry;
+                const pnlPct = calcUnrealizedPct(pos, cur) ?? 0;
+                const pnlClass = pnlPct >= 0 ? "pos" : "neg";
+                const sign = pnlPct >= 0 ? "+" : "";
+                const sideClass = pos.side === "LONG" ? "pos" : "neg";
+                return `
+                    <div class="pos-card ${pos.side.toLowerCase()}" onclick="selectSymbol('${s}')" style="cursor:pointer;">
+                        <div class="pos-card-head">
+                            <span>${s.replace("USDT", "")} <span class="${sideClass}">[${pos.side}]</span></span>
+                            <span class="${pnlClass}">${sign}${pnlPct.toFixed(2)}%</span>
+                        </div>
+                        <div class="pos-levels">
+                            <span>Entry: $${formatPrice(pos.entry)}</span>
+                            <span>Now: $${formatPrice(cur)}</span>
+                        </div>
+                        <div class="pos-levels">
+                            <span class="pos">TP: $${formatPrice(pos.tp)}</span>
+                            <span class="neg">SL: $${formatPrice(pos.sl)}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                            <span style="color:var(--text-muted); font-size:10px;">TF ${pos.tf.toUpperCase()} · ${pos.openedAt}</span>
+                            <button class="pos-action-btn btn-close-pos" onclick="event.stopPropagation();closePosition('${s}')">CLOSE POSITION</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderChartPositionOverlay() {
+            const hud = document.getElementById("chartPosHud");
+            const levelStrip = document.getElementById("chartLevelStrip");
+            const pos = openPositions[activeSym];
+
+            if (!showChartOverlay || !pos) {
+                hud.classList.remove("visible");
+                levelStrip.classList.remove("visible");
+                hud.innerHTML = "";
+                levelStrip.innerHTML = "";
+                return;
+            }
+
+            const cur = latestPrices[activeSym] || pos.entry;
+            const pnlPct = calcUnrealizedPct(pos, cur) ?? 0;
+            const pnlClass = pnlPct >= 0 ? "pos" : "neg";
+            const sign = pnlPct >= 0 ? "+" : "";
+            const sideColor = pos.side === "LONG" ? "var(--bull-green)" : "var(--bear-red)";
+
+            hud.classList.add("visible");
+            hud.innerHTML = `
+                <span style="color:${sideColor}; font-weight:800;">● ${activeSym.replace("USDT", "")} ${pos.side} POSITION</span>
+                <span>Entry: <b>$${formatPrice(pos.entry)}</b></span>
+                <span>Unrealized: <span class="${pnlClass}">${sign}${pnlPct.toFixed(2)}%</span></span>
+                <button class="pos-action-btn btn-close-pos" style="padding:3px 8px; font-size:10px;" onclick="closePosition('${activeSym}')">CLOSE</button>
+            `;
+
+            levelStrip.classList.add("visible");
+            levelStrip.innerHTML = `
+                <div class="lvl-tp">▲ TP: $${formatPrice(pos.tp)}</div>
+                <div class="lvl-entry">◆ ENTRY: $${formatPrice(pos.entry)}</div>
+                <div class="lvl-sl">▼ SL: $${formatPrice(pos.sl)}</div>
+            `;
+        }
+
+        function setHistoryFilter(type) {
+            historyFilter = type;
+            document.querySelectorAll('.hist-filter-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`hfilter-${type}`);
+            if (btn) btn.classList.add('active');
+            renderOverallAndHistory();
+        }
+
+        function renderOverallAndHistory() {
+            let totalW = 0, totalL = 0;
+            symbols.forEach(s => {
+                timeframes.forEach(tf => {
+                    if (stats[s] && stats[s][tf]) {
+                        totalW += stats[s][tf].w || 0;
+                        totalL += stats[s][tf].l || 0;
+                    }
+                });
+            });
+            const totalTrades = totalW + totalL;
+            const winRate = totalTrades > 0 ? ((totalW / totalTrades) * 100).toFixed(1) : 0;
+
+            document.getElementById("overallRate").innerText = `${winRate}%`;
+            document.getElementById("overallWL").innerHTML = `<span class="pos">${totalW}W</span> - <span class="neg">${totalL}L</span>`;
+            document.getElementById("overallTotal").innerText = `${totalTrades}`;
+
+            const listEl = document.getElementById("tradeHistoryList");
+            const filteredHist = (tradeHistory || []).filter(item => historyFilter === 'ALL' || item.type === historyFilter);
+            if (!filteredHist.length) {
+                listEl.innerHTML = `<div class="empty-history">ยังไม่มีรายการประวัติตามตัวกรองนี้</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filteredHist.slice(0, 40).map(item => {
+                const isWin = item.type === 'w';
+                const badgeClass = isWin ? 'chip-win' : 'chip-loss';
+                const resultText = isWin ? '<span class="pos">+WIN</span>' : '<span class="neg">-LOSS</span>';
+                const priceStr = item.price ? ` @ $${formatPrice(item.price)}` : '';
+                const pnlStr = item.pnlText ? ` <span class="${isWin ? 'pos' : 'neg'}">(${item.pnlText})</span>` : '';
+                return `
+                    <div class="history-chip ${badgeClass}" onclick="selectSymbol('${item.symbol}')" title="คลิกเพื่อดูกราฟ ${item.symbol}">
+                        ${resultText}
+                        <strong>${item.symbol.replace("USDT", "")}</strong>
+                        <span style="color:var(--binance-yellow)">[${item.tf.toUpperCase()}]</span>
+                        <span style="color:#cfd6df">${priceStr}</span>${pnlStr}
+                        <span class="chip-time">${item.time}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearHistory() {
+            if (!tradeHistory.length) return;
+            if (confirm("ต้องการล้างรายการประวัติการกดทั้งหมดใช่หรือไม่? (สถิติ W/L บนการ์ดจะยังคงอยู่)")) {
+                tradeHistory = [];
+                localStorage.setItem("titanTradeHistoryV1", JSON.stringify(tradeHistory));
+                renderOverallAndHistory();
+            }
+        }
+
+        function setSignalFilter(type) {
+            signalFilter = type;
+            document.querySelectorAll('.sig-filter-btn').forEach(b => {
+                b.className = 'sig-filter-btn';
+            });
+            const activeBtn = document.getElementById(`filter-${type.toLowerCase()}`);
+            if (activeBtn) {
+                activeBtn.classList.add(type === 'ALL' ? 'active-all' : `active-${type.toLowerCase()}`);
+            }
+            renderGrid();
+            refreshData();
+        }
+
+        function applyFilter() {
+            searchQuery = document.getElementById("coinSearch").value.trim().toUpperCase();
+            renderGrid();
+            refreshData();
+        }
+
+        function clearSearch() {
+            document.getElementById("coinSearch").value = "";
+            searchQuery = "";
+            renderGrid();
+            refreshData();
+        }
+
+        function getFilteredSymbols() {
+            return symbols.filter(s => {
+                const matchSearch = !searchQuery || s.replace("USDT", "").includes(searchQuery) || s.includes(searchQuery);
+                const sig = latestSignals[s] || 'NEUTRAL';
+                const matchSignal = (signalFilter === 'ALL') || (sig === signalFilter);
+                return matchSearch && matchSignal;
+            });
+        }
+
+        function updateSignalCounts() {
+            let l = 0, sh = 0, n = 0;
+            symbols.forEach(s => {
+                const sig = latestSignals[s] || 'NEUTRAL';
+                if (sig === 'LONG') l++;
+                else if (sig === 'SHORT') sh++;
+                else n++;
+            });
+            document.getElementById('cnt-all').innerText = symbols.length;
+            document.getElementById('cnt-long').innerText = l;
+            document.getElementById('cnt-short').innerText = sh;
+            document.getElementById('cnt-neutral').innerText = n;
+        }
+
+        function toggleGuide() {
+            document.getElementById("fibPatternGuide").classList.toggle("open");
+        }
+
+        function fillActivePrice() {
+            const p = latestPrices[activeSym];
+            if (!p) return;
+            document.getElementById("priceA").value = p;
+            calcDiff();
+        }
+
+        function calcDiff() {
+            const a = parseFloat(document.getElementById("priceA").value);
+            const b = parseFloat(document.getElementById("priceB").value);
+            const out = document.getElementById("diffOutput");
+            if (isNaN(a) || isNaN(b) || a === 0) {
+                out.innerHTML = 'ระยะต่าง: --% | ส่วนต่าง: --';
+                return;
+            }
+            const pct = ((b - a) / a) * 100;
+            const absDiff = b - a;
+            const cls = pct >= 0 ? 'pos' : 'neg';
+            const sign = pct >= 0 ? '+' : '';
+            out.innerHTML = `ระยะต่าง: <span class="${cls}">${sign}${pct.toFixed(2)}%</span> | ส่วนต่าง: <span class="${cls}">${sign}${formatPrice(absDiff)}</span>`;
+        }
+
+        function loadChart() {
+            const map = {
+                '15m': '15',
+                '1h': '60',
+                '4h': '240',
+                '1d': 'D',
+                '1m': 'M'
+            };
+            document.getElementById("main_chart").innerHTML = "";
+            new TradingView.widget({
+                "autosize": true, 
+                "symbol": "BINANCE:" + activeSym, 
+                "interval": map[interval], 
+                "theme": "dark", 
+                "container_id": "main_chart", 
+                "style": "1", 
+                "hide_top_toolbar": false,
+                "hide_side_toolbar": false,
+                "studies": ["MASimple@tv-basicstudies"],
+                "save_image": false
+            });
+            renderChartPositionOverlay();
+        }
+
+        function selectSymbol(s) {
+            activeSym = s;
+            updateTargetSymLabel();
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('active-card'));
+            const selectedCard = document.getElementById(`card-${s}`);
+            if (selectedCard) selectedCard.classList.add('active-card');
+            loadChart();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderGrid() {
+            const container = document.getElementById("main_grid");
+            const list = getFilteredSymbols();
+            document.getElementById("searchMeta").innerHTML = `แสดง <span>${list.length}</span> / ${symbols.length} เหรียญ`;
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="empty-state">ไม่พบเหรียญตามเงื่อนไขที่เลือก (ค้นหา: "<b>${searchQuery || '-'}</b>", สัญญาณ: <b>${signalFilter}</b>)</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(s => {
+                const rank = symbols.indexOf(s) + 1;
+                return `
+                <div id="card-${s}" class="card ${s === activeSym ? 'active-card' : ''}" onclick="selectSymbol('${s}')">
+                    <div class="coin-header">
+                        <div>
+                            <span class="coin-name">${s.replace("USDT","")}</span>
+                            <span class="coin-rank">#${rank}</span>
+                            <span id="${s}-pos-tag" class="pos-pill-tag" style="display:none;"></span>
+                        </div>
+                        <span id="${s}-price" class="price-text">---</span>
+                    </div>
+                    <div id="${s}-signal" class="signal-block">SCANNING MARKET...</div>
+                    <div id="${s}-pos-box" class="pos-control-box"></div>
+                    <div id="${s}-meta" class="meta-strip">
+                        <div class="meta-row"><span>Fib 0.618 / 0.5:</span><span class="fib-val">---</span></div>
+                        <div class="meta-row"><span>% ไป TP / SL:</span><span>---</span></div>
+                    </div>
+                    <div class="journal-box">
+                        <div class="global-stats">
+                            <span>TOTAL WIN RATE:</span>
+                            <span id="${s}-all-rate" style="color:var(--binance-yellow)">0% (0-0)</span>
+                        </div>
+                        
+                        <div class="journal-header">
+                            <span>${interval.toUpperCase()} STATS</span>
+                            <button class="j-reset" onclick="event.stopPropagation();resetStats('${s}')">RESET</button>
+                        </div>
+                        <div class="stats-row">
+                            <span id="${s}-win" style="color:var(--bull-green); font-weight:bold;">W: 0</span>
+                            <span id="${s}-loss" style="color:var(--bear-red); font-weight:bold;">L: 0</span>
+                            <span id="${s}-rate" style="color:var(--binance-yellow); font-weight:bold;">0% RATE</span>
+                        </div>
+                        <div class="btn-group">
+                            <button class="j-btn j-win" onclick="event.stopPropagation();logTrade('${s}','w')">+ WIN</button>
+                            <button class="j-btn j-loss" onclick="event.stopPropagation();logTrade('${s}','l')">- LOSS</button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+            list.forEach(s => {
+                updateUI(s);
+                updateCardPositionBadge(s);
+            });
+        }
+
+        function updateTF(t) {
+            interval = t;
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b.id === 'btn-'+t));
+            loadChart(); renderGrid(); refreshData();
+        }
+
+        function logTrade(s, type) { 
+            stats[s][interval][type]++; 
+            localStorage.setItem("titanStatsV5", JSON.stringify(stats));
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            tradeHistory.unshift({
+                symbol: s,
+                tf: interval,
+                type: type,
+                price: latestPrices[s] || null,
+                time: timeStr
+            });
+            if (tradeHistory.length > 100) tradeHistory = tradeHistory.slice(0, 100);
+            localStorage.setItem("titanTradeHistoryV1", JSON.stringify(tradeHistory));
+
+            updateUI(s); 
+            renderOverallAndHistory();
+        }
+        
+        function resetStats(s) { 
+            if(confirm(`Reset ${interval.toUpperCase()} stats for ${s}?`)) { 
+                stats[s][interval] = {w:0, l:0}; 
+                localStorage.setItem("titanStatsV5", JSON.stringify(stats)); 
+                updateUI(s); 
+                renderOverallAndHistory();
+            } 
+        }
+        
+        function updateUI(s) {
+            const d = stats[s][interval] || {w:0, l:0};
+            const currentTotal = d.w + d.l;
+            const winEl = document.getElementById(s+'-win');
+            if (winEl) winEl.innerText = 'W: ' + d.w;
+            
+            const lossEl = document.getElementById(s+'-loss');
+            if (lossEl) lossEl.innerText = 'L: ' + d.l;
+            
+            const rateEl = document.getElementById(s+'-rate');
+            if (rateEl) rateEl.innerText = (currentTotal > 0 ? ((d.w/currentTotal)*100).toFixed(0) : 0) + '% RATE';
+
+            let allW = 0, allL = 0;
+            timeframes.forEach(tf => {
+                if (stats[s][tf]) {
+                    allW += stats[s][tf].w;
+                    allL += stats[s][tf].l;
+                }
+            });
+            const allTotal = allW + allL;
+            const allRate = allTotal > 0 ? ((allW / allTotal) * 100).toFixed(0) : 0;
+            
+            const allRateEl = document.getElementById(s+'-all-rate');
+            if (allRateEl) allRateEl.innerText = `${allRate}% (${allW}-${allL})`;
+        }
+
+        function formatPrice(p) {
+            const absP = Math.abs(p);
+            if (absP >= 100) return p.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (absP >= 1) return p.toFixed(4);
+            return p.toFixed(6);
+        }
+
+        function calcFibLevels(h, l, lookback = 60) {
+            const start = Math.max(0, h.length - lookback);
+            const swingHigh = Math.max(...h.slice(start));
+            const swingLow = Math.min(...l.slice(start));
+            const diff = swingHigh - swingLow;
+            return {
+                fib50: swingHigh - diff * 0.5,
+                fib618: swingHigh - diff * 0.618
+            };
+        }
+
+        async function fetchSymbolData(s) {
+            try {
+                const binanceIntervalMap = {
+                    '15m': '15m',
+                    '1h': '1h',
+                    '4h': '4h',
+                    '1d': '1d',
+                    '1m': '1M'
+                };
+
+                const binanceInterval = binanceIntervalMap[interval];
+                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${s}&interval=${binanceInterval}&limit=250`);
+                const k = await res.json();
+                
+                if (!Array.isArray(k) || k.length === 0) return;
+
+                const cl = k.map(c => parseFloat(c[4])), h = k.map(c => parseFloat(c[2])), l = k.map(c => parseFloat(c[3]));
+                
+                const period200 = Math.min(200, cl.length);
+                const ema9 = calcEMA(cl, 9), ema21 = calcEMA(cl, 21), ema200 = calcEMA(cl, period200), atr = calcATR(h, l, cl, 14);
+                
+                const last = cl.length - 1;
+                const cur = cl[last];
+                latestPrices[s] = cur;
+                const curATR = atr[last] || (cur * 0.02);
+                latestATR[s] = curATR;
+                const fib = calcFibLevels(h, l, 60);
+                
+                const score = (cur > ema200[last] ? 1 : -1) + (ema9[last] > ema21[last] ? 1 : -1);
+                
+                if (score >= 2) latestSignals[s] = 'LONG';
+                else if (score <= -2) latestSignals[s] = 'SHORT';
+                else latestSignals[s] = 'NEUTRAL';
+
+                updateSignalCounts();
+                updateCardPositionBadge(s);
+
+                const priceEl = document.getElementById(s+'-price');
+                if (!priceEl) return;
+                priceEl.innerText = '$' + formatPrice(cur);
+                
+                const el = document.getElementById(s+'-signal');
+                const metaEl = document.getElementById(s+'-meta');
+                if (!el || !metaEl) return;
+                
+                if (score >= 2) {
+                    const tp = cur + curATR * 3;
+                    const sl = cur - curATR * 1.5;
+                    const tpPct = (((tp - cur) / cur) * 100).toFixed(2);
+                    const slPct = (((sl - cur) / cur) * 100).toFixed(2);
+                    el.className = 'signal-block sig-long';
+                    el.innerHTML = `<strong>LONG</strong><div class="targets"><span>TP: $${formatPrice(tp)}</span><span>SL: $${formatPrice(sl)}</span></div>`;
+                    metaEl.innerHTML = `
+                        <div class="meta-row"><span>Fib 0.618 / 0.5:</span><span class="fib-val">$${formatPrice(fib.fib618)} / $${formatPrice(fib.fib50)}</span></div>
+                        <div class="meta-row"><span>ระยะ % (TP / SL):</span><span><span class="pos">+${tpPct}%</span> / <span class="neg">${slPct}%</span></span></div>
+                    `;
+                } else if (score <= -2) {
+                    const tp = cur - curATR * 3;
+                    const sl = cur + curATR * 1.5;
+                    const tpPct = (((tp - cur) / cur) * 100).toFixed(2);
+                    const slPct = (((sl - cur) / cur) * 100).toFixed(2);
+                    el.className = 'signal-block sig-short';
+                    el.innerHTML = `<strong>SHORT</strong><div class="targets"><span>TP: $${formatPrice(tp)}</span><span>SL: $${formatPrice(sl)}</span></div>`;
+                    metaEl.innerHTML = `
+                        <div class="meta-row"><span>Fib 0.618 / 0.5:</span><span class="fib-val">$${formatPrice(fib.fib618)} / $${formatPrice(fib.fib50)}</span></div>
+                        <div class="meta-row"><span>ระยะ % (TP / SL):</span><span><span class="pos">${tpPct}%</span> / <span class="neg">+${slPct}%</span></span></div>
+                    `;
+                } else {
+                    el.className = 'signal-block'; 
+                    el.innerText = 'NEUTRAL / NO EDGE';
+                    metaEl.innerHTML = `
+                        <div class="meta-row"><span>Fib 0.618 / 0.5:</span><span class="fib-val">$${formatPrice(fib.fib618)} / $${formatPrice(fib.fib50)}</span></div>
+                        <div class="meta-row"><span>% ถึง Fib 0.618:</span><span>${(((fib.fib618 - cur) / cur) * 100).toFixed(2)}%</span></div>
+                    `;
+                }
+            } catch (e) {
+                console.error(`Error loading ${s}:`, e);
+            }
+        }
+
+        async function refreshData() {
+            const targetList = getFilteredSymbols();
+            await Promise.all(targetList.map(s => fetchSymbolData(s)));
+            renderPositionsUI();
+            renderChartPositionOverlay();
+        }
+
+        function calcEMA(d, p) {
+            if (d.length < p) p = d.length;
+            const k = 2 / (p + 1);
+            let r = [d.slice(0, p).reduce((a, b) => a + b) / p];
+            for (let i = p; i < d.length; i++) r.push(d[i] * k + r[r.length - 1] * (1 - k));
+            return new Array(p - 1).fill(r[0]).concat(r);
+        }
+
+        function calcATR(h, l, c, p) {
+            let tr = [h[0] - l[0]];
+            for (let i = 1; i < c.length; i++) {
+                tr.push(Math.max(h[i] - l[i], Math.abs(h[i] - c[i - 1]), Math.abs(l[i] - c[i - 1])));
+            }
+            if (tr.length < p) p = tr.length;
+            let r = [];
+            for (let i = p - 1; i < c.length; i++) {
+                r.push(tr.slice(i - p + 1, i + 1).reduce((a, b) => a + b) / p);
+            }
+            return new Array(p - 1).fill(r[0]).concat(r);
+        }
+
+        init();
+    </script>
+</body>
+</html>
